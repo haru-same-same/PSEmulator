@@ -79,6 +79,7 @@ class PSEmulator:
                 self.volt_nstep = math.floor(abs(dv) / self.volt_slew_fall) + 1
 
     def set_current(self, curr: float) -> None:
+        self.target_current = curr
         di = self.current - curr
         if di < 0: #raise current
             if math.isclose(self.curr_slew_rise, 0): #slew rate == 0
@@ -103,19 +104,21 @@ class PSEmulator:
     def set_curr_slew_fall(self, curr_slew_f: float) -> None:
         self.curr_slew_fall = curr_slew_f
 
-    def update_canvas(self, _fig, _ax1, _ax2, p_time: float, volt: float, curr: float) -> any:
-        self.time_list.append(p_time)
-        self.volt_list.append(volt)
-        self.curr_list.append(curr)
-        if len(self.time_list) > 100:
-            del self.time_list[0:80]
-            del self.volt_list[0:80]
-            del self.curr_list[0:80]
+    def update_canvas(self, _fig, _ax1, _ax2, p_time: float, volt: float, curr: float) -> None:
+        #self.time_list.append(p_time)
+        #self.volt_list.append(volt)
+        #self.curr_list.append(curr)
+        #if len(self.time_list) > 100:
+        #    del self.time_list[0:80]
+        #    del self.volt_list[0:80]
+        #    del self.curr_list[0:80]
         
         _ax1.set_xlim(p_time - 30, p_time + 30)
-        _ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
+        #_ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
+        _ax1.set_data(p_time, volt)
         _ax2.set_xlim(p_time - 30, p_time + 30)
-        _ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
+        #_ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
+        _ax2.set_data(p_time, curr)
         plt.pause(0.01)
 
     def stand_by(self) -> None:
