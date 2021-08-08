@@ -160,34 +160,41 @@ class PSEmulator:
                     par = float(line.split()[1].rstrip(';\r\n'))
                 
                 # set parameters
-                if comm == ':SOURce:VOLTage:SLEW:RISing':
-                    self.conn.write(self.okmsg)
-                    self.set_volt_slew_rise(par)
-
-                elif comm == ':SOURce:VOLTage:SLEW:FALLing':
-                    self.conn.write(self.okmsg)
-                    self.set_volt_slew_fall(par)
-                    
-                elif ':SOURce:VOLTage' in comm:
-                    self.conn.write(self.okmsg)
-                    self.set_voltage(par)
-
-                elif comm == ':SOURce:CURRent:SLEW:RISing':
-                    self.conn.write(self.okmsg)
-                    self.set_curr_slew_rise(par)
-
-                elif comm == ':SOURce:CURRent:SLEW:FALLing':
-                    self.conn.write(self.okmsg)
-                    self.set_curr_slew_fall(par)
-                    
-                elif ':SOURce:CURRent' in comm:
-                    self.conn.write(self.okmsg)
-                    self.set_current(par)
-
-                elif comm == ':MEASure:VOLTage?':
-                    self.conn.write((str(self.voltage) + '\n').encode())
-
-                elif comm == ':MEASure:CURRent?':
-                    self.conn.write((str(self.current) + '\n').encode())
+                if ':SOURce' in comm:
+                    if ':VOLTage' in comm:
+                        if ':SLEW' in comm:
+                            if ':RISing' in comm:
+                                self.conn.write(self.okmsg)
+                                self.set_volt_slew_rise(par)
+                            elif ':FALLing' in comm:
+                                self.conn.write(self.okmsg)
+                                self.set_volt_slew_fall(par)
+                            else:
+                                print('Invalid command: ' + comm)
+                        else:
+                            self.conn.write(self.okmsg)
+                            self.set_voltage(par)
+                    elif ':CURRent' in comm:
+                        if ':SLEW' in comm:
+                            if ':RISing' in comm:
+                                self.conn.write(self.okmsg)
+                                self.set_curr_slew_rise(par)
+                            elif ':FALLing' in comm:
+                                self.conn.write(self.okmsg)
+                                self.set_curr_slew_fall(par)
+                            else:
+                                print('Invalid command: ' + comm)
+                        else:
+                            self.conn.write(self.okmsg)
+                            self.set_current(par)
+                elif ':MEASure' in comm:
+                    if ':VOLTage?' in comm:
+                        self.conn.write((str(self.voltage) + '\n').encode())
+                    elif ':CURRent?' in comm:
+                        self.conn.write((str(self.current) + '\n').encode())
+                    else:
+                        print('Invalid command: ' + comm)
+                else:
+                    print('Invalid command: ' + comm)
             next_time = 1 - (time.time() - loop_start_time)
             time.sleep(next_time)
