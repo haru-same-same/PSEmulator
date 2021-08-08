@@ -141,7 +141,7 @@ class PSEmulator:
         print('Setting up canvas: done')
         
         while True:
-            start_time = time.time()
+            loop_start_time = time.time()
             self.update_parameters()
             dt = time.time() - self.prev_time
             if dt > 2:
@@ -188,6 +188,6 @@ class PSEmulator:
 
                 elif comm == ':MEASure:CURRent?':
                     self.conn.write((str(self.current) + '\n').encode())
-            next_time = 1 - (time.time() - start_time)
+            next_time = 1 - (time.time() - loop_start_time)
             print(next_time)
             time.sleep(next_time)
