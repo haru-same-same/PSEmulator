@@ -108,16 +108,16 @@ class PSEmulator:
         self.time_list.append(p_time)
         self.volt_list.append(volt)
         self.curr_list.append(curr)
-        if len(self.time_list) > 20:
+        if len(self.time_list) > 40:
             del self.time_list[0]
             del self.volt_list[0]
             del self.curr_list[0]
         
         _ax1.set_xlim(p_time - 30, p_time + 30)
-        _ax1.set_ylim(-5, max(self.volt_list) + 5)
+        _ax1.set_ylim(-1, max(self.volt_list) + 5)
         _gr1.set_data(self.time_list, self.volt_list)
         _ax2.set_xlim(p_time - 30, p_time + 30)
-        _ax2.set_ylim(-5, max(self.curr_list) + 5)
+        _ax2.set_ylim(-1, max(self.curr_list) + 5)
         _gr2.set_data(self.time_list, self.curr_list)
         plt.pause(0.01)
 
