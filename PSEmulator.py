@@ -8,8 +8,6 @@ class PSEmulator:
     # Member variables
     conn: serial.serialposix.Serial
     start_time: float = 0 #s
-    passed_time: float = 0 #s
-    prev_time: float = 0 #s
     time_list: list = []
     volt_list: list = []
     curr_list: list = []
@@ -37,8 +35,6 @@ class PSEmulator:
 
     # Member functions
     def __init__(self, device_addr: str, bit_rate: int) -> None:
-        self.start_time = time.time()
-        self.prev_time = self.start_time
         print('Connecting serial device: ' + device_addr)
         try:
             self.conn = serial.Serial(device_addr, bit_rate, timeout = None)
@@ -139,15 +135,14 @@ class PSEmulator:
         ax2.set_ylabel('Current [A]')
         ax2.grid()
         print('Setting up canvas: done')
+        self.start_time = time.time()
         
         while True:
             loop_start_time = time.time()
+            
             self.update_parameters()
-            dt = time.time() - self.prev_time
-            if dt > 2:
-                self.passed_time = time.time() - self.start_time
-                self.prev_time = time.time()
-                self.update_canvas(fig, ax1, ax2, self.passed_time, self.voltage, self.current)
+            passed_time = time.time() - self.start_time
+            self.update_canvas(fig, ax1, ax2, passed_time, self.voltage, self.current)
             
             if self.conn.in_waiting > 0:
                 line = self.conn.readline().decode()
