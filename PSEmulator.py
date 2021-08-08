@@ -104,21 +104,19 @@ class PSEmulator:
     def set_curr_slew_fall(self, curr_slew_f: float) -> None:
         self.curr_slew_fall = curr_slew_f
 
-    def update_canvas(self, _fig, _ax1, _ax2, p_time: float, volt: float, curr: float) -> None:
-        #self.time_list.append(p_time)
-        #self.volt_list.append(volt)
-        #self.curr_list.append(curr)
-        #if len(self.time_list) > 100:
-        #    del self.time_list[0:80]
-        #    del self.volt_list[0:80]
-        #    del self.curr_list[0:80]
+    def update_canvas(self, _ax1, _ax2, p_time: float, volt: float, curr: float) -> None:
+        self.time_list.append(p_time)
+        self.volt_list.append(volt)
+        self.curr_list.append(curr)
+        if len(self.time_list) > 100:
+            del self.time_list[0:80]
+            del self.volt_list[0:80]
+            del self.curr_list[0:80]
         
         _ax1.set_xlim(p_time - 30, p_time + 30)
-        #_ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
-        _ax1.set_data(p_time, volt)
+        _ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
         _ax2.set_xlim(p_time - 30, p_time + 30)
-        #_ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
-        _ax2.set_data(p_time, curr)
+        _ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
         plt.pause(0.01)
 
     def stand_by(self) -> None:
@@ -142,7 +140,7 @@ class PSEmulator:
             
             self.update_parameters()
             passed_time = time.time() - self.start_time
-            self.update_canvas(fig, ax1, ax2, passed_time, self.voltage, self.current)
+            self.update_canvas(ax1, ax2, passed_time, self.voltage, self.current)
             
             if self.conn.in_waiting > 0:
                 line = self.conn.readline().decode()
