@@ -104,7 +104,7 @@ class PSEmulator:
     def set_curr_slew_fall(self, curr_slew_f: float) -> None:
         self.curr_slew_fall = curr_slew_f
 
-    def update_canvas(self, _ax1, _ax2, p_time: float, volt: float, curr: float) -> None:
+    def update_canvas(self, _gr1, _gr2, _ax1, _ax2, p_time: float, volt: float, curr: float) -> None:
         self.time_list.append(p_time)
         self.volt_list.append(volt)
         self.curr_list.append(curr)
@@ -114,24 +114,32 @@ class PSEmulator:
             del self.curr_list[0:80]
         
         _ax1.set_xlim(p_time - 30, p_time + 30)
-        _ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
+        #_ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
+        _gr1.set_data(self.time_list, self.volt_list)
         _ax2.set_xlim(p_time - 30, p_time + 30)
-        _ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
+        #_ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
+        _gr2.set_data(self.time_list, self.curr_list)
         plt.pause(0.01)
 
     def stand_by(self) -> None:
         print('Setting up canvas...')
+        self.time_list.append(p_time)
+        self.volt_list.append(volt)
+        self.curr_list.append(curr)
+        
         fig = plt.figure(figsize = (20, 8))
         
         ax1 = fig.add_subplot(1, 2, 1)
         ax1.set_xlabel('time from init [t]')
         ax1.set_ylabel('Voltage [V]')
         ax1.grid()
+        gr1, = ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
         
         ax2 = fig.add_subplot(1, 2, 2)
         ax2.set_xlabel('time from init [t]')
         ax2.set_ylabel('Current [A]')
         ax2.grid()
+        gr2, = ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
         print('Setting up canvas: done')
         self.start_time = time.time()
         
@@ -140,7 +148,7 @@ class PSEmulator:
             
             self.update_parameters()
             passed_time = time.time() - self.start_time
-            self.update_canvas(ax1, ax2, passed_time, self.voltage, self.current)
+            self.update_canvas(gr1, gr2, ax1, ax2, passed_time, self.voltage, self.current)
             
             if self.conn.in_waiting > 0:
                 line = self.conn.readline().decode()
