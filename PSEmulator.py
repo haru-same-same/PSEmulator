@@ -2,7 +2,6 @@ import serial
 import math
 import time
 import matplotlib.pyplot as plt
-from IPython.display import display, clear_output
 
 class PSEmulator:
     # Member variables
@@ -117,10 +116,7 @@ class PSEmulator:
         _ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
         _ax2.set_xlim(p_time - 30, p_time + 30)
         _ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
-        #display(_fig)
-        #clear_output(wait = True)
         plt.pause(0.01)
-        #plt.cla()
 
     def stand_by(self) -> None:
         print('Setting up canvas...')
@@ -185,5 +181,4 @@ class PSEmulator:
                 elif comm == ':MEASure:CURRent?':
                     self.conn.write((str(self.current) + '\n').encode())
             next_time = 1 - (time.time() - loop_start_time)
-            print(next_time)
-            time.sleep(1)
+            time.sleep(next_time)
