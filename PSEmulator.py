@@ -108,10 +108,10 @@ class PSEmulator:
         self.time_list.append(p_time)
         self.volt_list.append(volt)
         self.curr_list.append(curr)
-        if len(self.time_list) > 20:
-            del self.time_list[0]
-            del self.volt_list[0]
-            del self.curr_list[0]
+        if len(self.time_list) > 100:
+            del self.time_list[0:80]
+            del self.volt_list[0:80]
+            del self.curr_list[0:80]
         
         _ax1.set_xlim(p_time - 30, p_time + 30)
         _ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
@@ -119,7 +119,7 @@ class PSEmulator:
         _ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
         display(_fig)
         clear_output(wait = True)
-        plt.pause(0.1)
+        plt.pause(0.01)
 
     def stand_by(self) -> None:
         print('Setting up canvas...')
