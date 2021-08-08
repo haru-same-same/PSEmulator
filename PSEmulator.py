@@ -22,10 +22,14 @@ class PSEmulator:
     ack_msg_state: bool = True
     
     voltage: float = 0 #V
+    target_voltage: float = 0 #V
+    volt_nstep: int = 0
     volt_slew_rise: float = 0 #V/s
     volt_slew_fall: float = 0 #V/s
 
     current: float = 0 #A
+    target_current: float = 0 #A
+    curr_nstep: int = 0
     curr_slew_rise: float = 0 #A/s
     curr_slew_fall: float = 0 #A/s
 
@@ -43,28 +47,41 @@ class PSEmulator:
         else:
             print('Serial connection: established')
 
+    def update_parameters(self) -> None:
+        if self.volt_nstep > 0:
+            dv = self.voltage - self.target_voltage
+            if dv < 0 and abs(dv) > self.volt_slew_rise:
+                self.voltage += self.volt_slew_rise
+            elif dv > 0 and abs(dv) > self.volt_slew_fall:
+                self.voltage -= self.volt_slew_fall
+            else:
+                self.voltage = self.target_voltage
+            self.volt_nstep -= 1
+        elif self.curr_nstep > 0:
+            di = self.current - self.target_current
+            if di < 0 and abs(di) > self.curr_slew_rise:
+                self.current += self.curr_slew_rise
+            elif di > 0 and abs(di) > self.curr_slew_fall:
+                self.current -= self.curr_slew_fall
+            else:
+                self.current = self.target_current
+            self.curr_nstep -= 1
+        else:
+            pass
+
     def set_voltage(self, volt: float) -> None:
+        self.target_voltage = volt
         dv = self.voltage - volt
         if dv < 0: #raise voltage
             if math.isclose(self.volt_slew_rise, 0): #slew rate == 0
                 self.voltage = volt
             else:
-                nstep = math.floor(abs(dv) / self.volt_slew_rise)
-                for step in range(nstep):
-                    time.sleep(1)
-                    self.voltage += self.volt_slew_rise
-                time.sleep(1)
-                self.voltage = volt
+                self.volt_nstep = math.floor(abs(dv) / self.volt_slew_rise) + 1
         else: #lower voltage
             if math.isclose(self.volt_slew_fall, 0): #slew rate == 0
                 self.voltage = volt
             else:
-                nstep = math.floor(abs(dv) / self.volt_slew_fall)
-                for step in range(nstep):
-                    time.sleep(1)
-                    self.voltage -= self.volt_slew_fall
-                time.sleep(1)
-                self.voltage = volt
+                self.volt_nstep = math.floor(abs(dv) / self.volt_slew_fall) + 1
 
     def set_current(self, curr: float) -> None:
         di = self.current - curr
@@ -72,22 +89,12 @@ class PSEmulator:
             if math.isclose(self.curr_slew_rise, 0): #slew rate == 0
                 self.current = curr
             else:
-                nstep = math.floor(abs(di) / self.curr_slew_rise)
-                for step in range(nstep):
-                    time.sleep(1)
-                    self.current += self.curr_slew_rise
-                time.sleep(1)
-                self.current = curr
+                self.curr_nstep = math.floor(abs(di) / self.curr_slew_rise) + 1
         else: #lower current
             if math.isclose(self.curr_slew_fall, 0): #slew rate == 0
                 self.current = curr
             else:
-                nstep = math.floor(abs(di) / self.curr_slew_fall)
-                for step in range(nstep):
-                    time.sleep(1)
-                    self.current -= self.curr_slew_fall
-                time.sleep(1)
-                self.current = curr
+                self.curr_nstep = math.floor(abs(di) / self.curr_slew_fall) + 1
 
     def set_volt_slew_rise(self, volt_slew_r: float) -> None:
         self.volt_slew_rise = volt_slew_r
@@ -100,12 +107,6 @@ class PSEmulator:
     
     def set_curr_slew_fall(self, curr_slew_f: float) -> None:
         self.curr_slew_fall = curr_slew_f
-
-    def get_voltage(self) -> float:
-        return self.voltage
-
-    def get_current(self) -> float:
-        return self.current
 
     def update_canvas(self, _fig, _ax1, _ax2, p_time: float, volt: float, curr: float) -> any:
         self.time_list.append(p_time)
@@ -140,11 +141,13 @@ class PSEmulator:
         print('Setting up canvas: done')
         
         while True:
+            start_time = time.time()
+            self.update_parameters()
             dt = time.time() - self.prev_time
             if dt > 2:
                 self.passed_time = time.time() - self.start_time
                 self.prev_time = time.time()
-                self.update_canvas(fig, ax1, ax2, self.passed_time, self.get_voltage(), self.get_current())
+                self.update_canvas(fig, ax1, ax2, self.passed_time, self.voltage, self.current)
             
             if self.conn.in_waiting > 0:
                 line = self.conn.readline().decode()
@@ -182,9 +185,8 @@ class PSEmulator:
 
                 elif comm == ':MEASure:VOLTage?':
                     self.conn.write((str(self.voltage) + '\n').encode())
-                    self.get_voltage()
 
                 elif comm == ':MEASure:CURRent?':
                     self.conn.write((str(self.current) + '\n').encode())
-                    self.get_current()
-            time.sleep(0.5)
+            next_time = 1 - (time.time() - start_time)
+            time.sleep(next_time)
