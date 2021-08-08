@@ -190,4 +190,4 @@ class PSEmulator:
                     self.conn.write((str(self.current) + '\n').encode())
             next_time = 1 - (time.time() - loop_start_time)
             print(next_time)
-            #time.sleep(next_time)
+            time.sleep(1)
