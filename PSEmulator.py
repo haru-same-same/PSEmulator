@@ -2,6 +2,7 @@ import socket
 import math
 import time
 import matplotlib.pyplot as plt
+import thraeding
 
 class PSEmulator:
     # Member variables
@@ -212,6 +213,6 @@ class PSEmulator:
         _gr2.set_data(self.time_list, self.curr_list)
         plt.pause(0.01)
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     pse = PSEmulator()
     pse.exec()
