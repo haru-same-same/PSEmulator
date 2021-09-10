@@ -34,15 +34,15 @@ class PSEmulator:
 
     # Member functions
     def __init__(self, device_addr: str, bit_rate: int) -> None:
-        print('Connecting serial device: ' + device_addr)
+        print('Server establishing...')
         try:
             self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.conn.bind((socket.gethostname(), 50001))
             self.conn.listen(1)
         except:
-            print('Serial connection ERROR!')
+            print('Server ERROR!')
         else:
-            print('Serial connection: established')
+            print('Server: established')
 
     def update_parameters(self) -> None:
         if self.volt_nstep > 0:
