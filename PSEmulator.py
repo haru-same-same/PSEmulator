@@ -69,34 +69,34 @@ class PSEmulator:
                 if ':VOLTage' in comm:
                     if ':SLEW' in comm:
                         if ':RISing' in comm:
-                            self.conn.sendall(self.okmsg)
+                            clientconn.send(self.okmsg)
                             self.set_volt_slew_rise(par)
                         elif ':FALLing' in comm:
-                            self.conn.sendall(self.okmsg)
+                            clientconn.send(self.okmsg)
                             self.set_volt_slew_fall(par)
                         else:
                             print('Invalid command: ' + comm)
                     else:
-                        self.conn.sendall(self.okmsg)
+                        clientconn.send(self.okmsg)
                         self.set_voltage(par)
                 elif ':CURRent' in comm:
                     if ':SLEW' in comm:
                         if ':RISing' in comm:
-                            self.conn.sendall(self.okmsg)
+                            clientconn.send(self.okmsg)
                             self.set_curr_slew_rise(par)
                         elif ':FALLing' in comm:
-                            self.conn.sendall(self.okmsg)
+                            clientconn.send(self.okmsg)
                             self.set_curr_slew_fall(par)
                         else:
                             print('Invalid command: ' + comm)
                     else:
-                        self.conn.sendall(self.okmsg)
+                        clientconn.send(self.okmsg)
                         self.set_current(par)
             elif ':MEASure' in comm:
                 if ':VOLTage?' in comm:
-                    self.conn.sendall((str(self.voltage) + '\n').encode())
+                    clientconn.send((str(self.voltage) + '\n').encode())
                 elif ':CURRent?' in comm:
-                    self.conn.sendall((str(self.current) + '\n').encode())
+                    clientconn.send((str(self.current) + '\n').encode())
                 else:
                     print('Invalid command: ' + comm)
             else:
