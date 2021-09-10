@@ -56,7 +56,7 @@ class PSEmulator:
         while True:
             clientconn, addr = self.conn.accept()
             rcv_data = clientconn.recv(4096)
-            line = rcv_data
+            line = rcv_data.decode()
             print(line)
             
             # read parameters
