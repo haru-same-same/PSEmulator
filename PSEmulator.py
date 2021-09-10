@@ -101,6 +101,7 @@ class PSEmulator:
                     print('Invalid command: ' + comm)
             else:
                 print('Invalid command: ' + comm)
+            clientconn.close()
 
     def monitoring(self) -> None:
         print('Setting up canvas...')
