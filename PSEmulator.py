@@ -1,11 +1,11 @@
-import serial
+import socket
 import math
 import time
 import matplotlib.pyplot as plt
 
 class PSEmulator:
     # Member variables
-    conn: serial.serialposix.Serial
+    conn: any
     start_time: float = 0 #s
     time_list: list = []
     volt_list: list = []
@@ -36,7 +36,9 @@ class PSEmulator:
     def __init__(self, device_addr: str, bit_rate: int) -> None:
         print('Connecting serial device: ' + device_addr)
         try:
-            self.conn = serial.Serial(device_addr, bit_rate, timeout = None)
+            self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.conn.bind((socket.gethostname(), 50001))
+            self.conn.listen(1)
         except:
             print('Serial connection ERROR!')
         else:
@@ -150,8 +152,11 @@ class PSEmulator:
             passed_time = time.time() - self.start_time
             self.update_canvas(gr1, gr2, ax1, ax2, passed_time, self.voltage, self.current)
             
-            if self.conn.in_waiting > 0:
-                line = self.conn.readline().decode()
+            clientconn, addr = self.conn.accept()
+            rcv_data = self.conn.recv(4096)
+            
+            if rcv_data > 0:
+                line = rcv_data
                 print(line)
                 
                 # read parameters
@@ -164,34 +169,34 @@ class PSEmulator:
                     if ':VOLTage' in comm:
                         if ':SLEW' in comm:
                             if ':RISing' in comm:
-                                self.conn.write(self.okmsg)
+                                self.conn.sendall(self.okmsg)
                                 self.set_volt_slew_rise(par)
                             elif ':FALLing' in comm:
-                                self.conn.write(self.okmsg)
+                                self.conn.sendall(self.okmsg)
                                 self.set_volt_slew_fall(par)
                             else:
                                 print('Invalid command: ' + comm)
                         else:
-                            self.conn.write(self.okmsg)
+                            self.conn.sendall(self.okmsg)
                             self.set_voltage(par)
                     elif ':CURRent' in comm:
                         if ':SLEW' in comm:
                             if ':RISing' in comm:
-                                self.conn.write(self.okmsg)
+                                self.conn.sendall(self.okmsg)
                                 self.set_curr_slew_rise(par)
                             elif ':FALLing' in comm:
-                                self.conn.write(self.okmsg)
+                                self.conn.sendall(self.okmsg)
                                 self.set_curr_slew_fall(par)
                             else:
                                 print('Invalid command: ' + comm)
                         else:
-                            self.conn.write(self.okmsg)
+                            self.conn.sendall(self.okmsg)
                             self.set_current(par)
                 elif ':MEASure' in comm:
                     if ':VOLTage?' in comm:
-                        self.conn.write((str(self.voltage) + '\n').encode())
+                        self.conn.sendall((str(self.voltage) + '\n').encode())
                     elif ':CURRent?' in comm:
-                        self.conn.write((str(self.current) + '\n').encode())
+                        self.conn.sendall((str(self.current) + '\n').encode())
                     else:
                         print('Invalid command: ' + comm)
                 else:
