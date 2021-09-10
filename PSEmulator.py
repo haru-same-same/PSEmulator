@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class PSEmulator:
     # Member variables
-    conn
+    conn: socket._socketobject
     start_time: float = 0 #s
     time_list: list = []
     volt_list: list = []
