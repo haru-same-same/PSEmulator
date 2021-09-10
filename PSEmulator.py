@@ -38,7 +38,7 @@ class PSEmulator:
         print('Server establishing...')
         try:
             self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.conn.bind((socket.gethostname(), 50001))
+            self.conn.bind(('0.0.0.0', 50001))
             self.conn.listen(1)
         except:
             print('Server ERROR!')
