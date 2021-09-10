@@ -2,7 +2,7 @@ import socket
 import math
 import time
 import matplotlib.pyplot as plt
-import thraeding
+import threading
 
 class PSEmulator:
     # Member variables
