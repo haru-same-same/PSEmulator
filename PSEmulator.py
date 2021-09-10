@@ -33,7 +33,7 @@ class PSEmulator:
     power: float = 0 #W
 
     # Member functions
-    def __init__(self, device_addr: str, bit_rate: int) -> None:
+    def __init__(self) -> None:
         print('Server establishing...')
         try:
             self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -43,6 +43,95 @@ class PSEmulator:
             print('Server ERROR!')
         else:
             print('Server: established')
+
+    def exec(self) -> None:
+        t_listen = threading.Thread(target = self.listen)
+        t_monitor = threading.Thread(target = self.monitoring)
+        
+        t_listen.start()
+        t_monitor.start()
+
+    def listen(self) -> None:
+        while True:
+            clientconn, addr = self.conn.accept()
+            rcv_data = self.conn.recv(4096)
+            line = rcv_data
+            print(line)
+            
+            # read parameters
+            comm = line.split()[0]
+            if len(line.split()) > 1:
+                par = float(line.split()[1].rstrip(';\r\n'))
+            
+            # set parameters
+            if ':SOURce' in comm:
+                if ':VOLTage' in comm:
+                    if ':SLEW' in comm:
+                        if ':RISing' in comm:
+                            self.conn.sendall(self.okmsg)
+                            self.set_volt_slew_rise(par)
+                        elif ':FALLing' in comm:
+                            self.conn.sendall(self.okmsg)
+                            self.set_volt_slew_fall(par)
+                        else:
+                            print('Invalid command: ' + comm)
+                    else:
+                        self.conn.sendall(self.okmsg)
+                        self.set_voltage(par)
+                elif ':CURRent' in comm:
+                    if ':SLEW' in comm:
+                        if ':RISing' in comm:
+                            self.conn.sendall(self.okmsg)
+                            self.set_curr_slew_rise(par)
+                        elif ':FALLing' in comm:
+                            self.conn.sendall(self.okmsg)
+                            self.set_curr_slew_fall(par)
+                        else:
+                            print('Invalid command: ' + comm)
+                    else:
+                        self.conn.sendall(self.okmsg)
+                        self.set_current(par)
+            elif ':MEASure' in comm:
+                if ':VOLTage?' in comm:
+                    self.conn.sendall((str(self.voltage) + '\n').encode())
+                elif ':CURRent?' in comm:
+                    self.conn.sendall((str(self.current) + '\n').encode())
+                else:
+                    print('Invalid command: ' + comm)
+            else:
+                print('Invalid command: ' + comm)
+
+    def monitoring(self) -> None:
+        print('Setting up canvas...')
+        self.time_list.append(0)
+        self.volt_list.append(self.voltage)
+        self.curr_list.append(self.current)
+        
+        fig = plt.figure(figsize = (20, 8))
+        
+        ax1 = fig.add_subplot(1, 2, 1)
+        ax1.set_xlabel('time from init [t]')
+        ax1.set_ylabel('Voltage [V]')
+        ax1.grid()
+        gr1, = ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
+        
+        ax2 = fig.add_subplot(1, 2, 2)
+        ax2.set_xlabel('time from init [t]')
+        ax2.set_ylabel('Current [A]')
+        ax2.grid()
+        gr2, = ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
+        print('Setting up canvas: done')
+        self.start_time = time.time()
+        
+        while True:
+            loop_start_time = time.time()
+            
+            self.update_parameters()
+            passed_time = time.time() - self.start_time
+            self.update_canvas(gr1, gr2, ax1, ax2, passed_time, self.voltage, self.current)
+            
+            next_time = 1 - (time.time() - loop_start_time)
+            time.sleep(next_time)
 
     def update_parameters(self) -> None:
         if self.volt_nstep > 0:
@@ -123,83 +212,6 @@ class PSEmulator:
         _gr2.set_data(self.time_list, self.curr_list)
         plt.pause(0.01)
 
-    def stand_by(self) -> None:
-        print('Setting up canvas...')
-        self.time_list.append(0)
-        self.volt_list.append(self.voltage)
-        self.curr_list.append(self.current)
-        
-        fig = plt.figure(figsize = (20, 8))
-        
-        ax1 = fig.add_subplot(1, 2, 1)
-        ax1.set_xlabel('time from init [t]')
-        ax1.set_ylabel('Voltage [V]')
-        ax1.grid()
-        gr1, = ax1.plot(self.time_list, self.volt_list, marker = 'o', color = 'b')
-        
-        ax2 = fig.add_subplot(1, 2, 2)
-        ax2.set_xlabel('time from init [t]')
-        ax2.set_ylabel('Current [A]')
-        ax2.grid()
-        gr2, = ax2.plot(self.time_list, self.curr_list, marker = 'o', color = 'r')
-        print('Setting up canvas: done')
-        self.start_time = time.time()
-        
-        while True:
-            loop_start_time = time.time()
-            
-            self.update_parameters()
-            passed_time = time.time() - self.start_time
-            self.update_canvas(gr1, gr2, ax1, ax2, passed_time, self.voltage, self.current)
-            
-            clientconn, addr = self.conn.accept()
-            rcv_data = self.conn.recv(4096)
-            
-            if rcv_data > 0:
-                line = rcv_data
-                print(line)
-                
-                # read parameters
-                comm = line.split()[0]
-                if len(line.split()) > 1:
-                    par = float(line.split()[1].rstrip(';\r\n'))
-                
-                # set parameters
-                if ':SOURce' in comm:
-                    if ':VOLTage' in comm:
-                        if ':SLEW' in comm:
-                            if ':RISing' in comm:
-                                self.conn.sendall(self.okmsg)
-                                self.set_volt_slew_rise(par)
-                            elif ':FALLing' in comm:
-                                self.conn.sendall(self.okmsg)
-                                self.set_volt_slew_fall(par)
-                            else:
-                                print('Invalid command: ' + comm)
-                        else:
-                            self.conn.sendall(self.okmsg)
-                            self.set_voltage(par)
-                    elif ':CURRent' in comm:
-                        if ':SLEW' in comm:
-                            if ':RISing' in comm:
-                                self.conn.sendall(self.okmsg)
-                                self.set_curr_slew_rise(par)
-                            elif ':FALLing' in comm:
-                                self.conn.sendall(self.okmsg)
-                                self.set_curr_slew_fall(par)
-                            else:
-                                print('Invalid command: ' + comm)
-                        else:
-                            self.conn.sendall(self.okmsg)
-                            self.set_current(par)
-                elif ':MEASure' in comm:
-                    if ':VOLTage?' in comm:
-                        self.conn.sendall((str(self.voltage) + '\n').encode())
-                    elif ':CURRent?' in comm:
-                        self.conn.sendall((str(self.current) + '\n').encode())
-                    else:
-                        print('Invalid command: ' + comm)
-                else:
-                    print('Invalid command: ' + comm)
-            next_time = 1 - (time.time() - loop_start_time)
-            time.sleep(next_time)
+if __name__ = '__main__':
+    pse = PSEmulator()
+    pse.exec()
