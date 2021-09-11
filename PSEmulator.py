@@ -54,6 +54,7 @@ class PSEmulator:
 
     def listen(self) -> None:
         while True:
+            self.update_parameters()
             clientconn, addr = self.conn.accept()
             rcv_data = clientconn.recv(4096)
             line = rcv_data.decode()
@@ -128,7 +129,6 @@ class PSEmulator:
         while True:
             loop_start_time = time.time()
             
-            self.update_parameters()
             passed_time = time.time() - self.start_time
             self.update_canvas(gr1, gr2, ax1, ax2, passed_time, self.voltage, self.current)
             
