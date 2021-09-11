@@ -45,12 +45,12 @@ class PSEmulator:
         else:
             print('Server: established')
 
-    def exec(self) -> None:
+    def exec(self, monitor: bool) -> None:
         t_listen = threading.Thread(target = self.listen)
-        t_monitor = threading.Thread(target = self.monitoring)
-        
         t_listen.start()
-        t_monitor.start()
+        if monitor:
+            t_monitor = threading.Thread(target = self.monitoring)
+            t_monitor.start()
 
     def listen(self) -> None:
         while True:
@@ -216,4 +216,4 @@ class PSEmulator:
 
 if __name__ == '__main__':
     pse = PSEmulator()
-    pse.exec()
+    pse.exec(monitor = False)
